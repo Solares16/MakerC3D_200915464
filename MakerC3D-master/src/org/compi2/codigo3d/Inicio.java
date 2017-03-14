@@ -82,8 +82,16 @@ public class Inicio extends javax.swing.JFrame {
             scanner scan = new scanner(new BufferedReader( new StringReader(texto)));
             parser parser = new parser(scan);
             parser.parse();
-            jTextArea_Codigo3Dgenerado.setText(ControlC3D.getC3D() + "\n" + "Etiqueta Verdadera: " + ControlC3D.getEtqV() + "\n" + "Etiqueta Falsa: " + ControlC3D.getEtqF());            
+            jTextArea_Codigo3Dgenerado.setText(ControlC3D.getC3D());
             System.out.println("Finaliza la generación de C3D...");
+            int a =3;
+            int b =3;
+            
+            if (5>90||a==0&&a>=9) {
+                
+            }
+            
+            
         } catch (Exception ex) {
             ex.printStackTrace();
         }
