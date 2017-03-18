@@ -22,11 +22,11 @@ action code
       
 :}
 
+
+
 terminal String ID, ENTERO, DECIMAL,MAYOR,MENOR,MAYOR_IGUAL,MENOR_IGUAL,IGUAL_IGUAL,DIFERENTE;
 terminal TokenC3D MAS, MENOS, MULT, DIV, POT, PAR_IZQ, PAR_DER,AND,OR,NOT;
 nonterminal NodoC3D inicial, expresion, ExpRel, ExpLogic,OPREL;
-
-
 
 precedence left MAS, MENOS;
 precedence left MULT, DIV; 
@@ -40,35 +40,61 @@ start with inicial;
 inicial     ::= {: ControlC3D.reiniciar(); :} ExpLogic:exp 
                     {: 
                         RESULT = exp;
-                        ControlC3D.agregarC3D("//Último valor: " + exp.getCad());
+                         if(exp.getCad().equals("Etiquetas ExpLogic") ||  exp.getCad().equals("Etiquetas ExpRel")){
+                            ControlC3D.agregarC3D("\n" + "//Etiqueta(s) Verdadera(s): " + ControlC3D.getEtqV());
+                            ControlC3D.agregarC3D("\n" + "//Etiqueta(s) Falsa(s): " + ControlC3D.getEtqF());
+                        }else{
+                            ControlC3D.agregarC3D("\n" + "//Último valor: " + exp.getCad());
+                        } 
+                        
                     :};
 
-ExpLogic    ::= ExpLogic:izq AND ExpLogic:der             {: 
-                                                        String temp = ControlC3D.generaTemp();
-                                                        String c3d = temp + " = " + izq.getCad() + " && " + der.getCad() + ";\n";
-                                                        ControlC3D.agregarC3D(c3d);
-                                                        RESULT = new NodoC3D(temp);         
+ExpLogic    ::= ExpLogic:izq  AND {: ControlC3D.agregarC3D( izq.getEtqV() + " : \n" );  :} ExpLogic:der             
+                                                    {: 
+                                                        
+                                                        NodoC3D aux = new NodoC3D("Etiquetas ExpLogic");         
+                                                        aux.setEtqV(der.getEtqV());    
+                                                        aux.setEtqF(izq.getEtqF()+","+der.getEtqF());    
+                                                        ControlC3D.setEtqV(aux.getEtqV());
+                                                        ControlC3D.setEtqF(aux.getEtqF());
+                                                        RESULT = aux;         
                                                      :}
-                |ExpLogic:izq OR ExpLogic:der             {: 
-                                                        String temp = ControlC3D.generaTemp();
-                                                        String c3d = temp + " = " + izq.getCad() + " || " + der.getCad() + ";\n";
-                                                        ControlC3D.agregarC3D(c3d);
-                                                        RESULT = new NodoC3D(temp);         
+                                                     
+                |ExpLogic:izq OR {: ControlC3D.agregarC3D( izq.getEtqF() + " : \n" );     :} ExpLogic:der 
+                                                    {:                                                         
+                                                        NodoC3D aux = new NodoC3D("Etiquetas ExpLogic");         
+                                                        aux.setEtqV(izq.getEtqV()+","+der.getEtqV());    
+                                                        aux.setEtqF(der.getEtqV());    
+                                                        ControlC3D.setEtqV(aux.getEtqV());
+                                                        ControlC3D.setEtqF(aux.getEtqF());
+                                                        RESULT = aux;         
                                                      :}   
                 |NOT ExpLogic:exp                      {: 
-                                                        String temp = ControlC3D.generaTemp();
-                                                        String c3d = temp + " = !" + exp.getCad() + ";\n";
-                                                        ControlC3D.agregarC3D(c3d);
-                                                        RESULT = new NodoC3D(temp);         
+                                                        NodoC3D aux = new NodoC3D("Etiquetas ExpLogic");         
+                                                        aux.setEtqV(exp.getEtqF());    
+                                                        aux.setEtqF(exp.getEtqV());    
+                                                        ControlC3D.setEtqV(aux.getEtqV());
+                                                        ControlC3D.setEtqF(aux.getEtqF());    
+                                                        RESULT = aux;         
                                                      :}
-                |ExpRel:exp                             {: RESULT = exp; :}
+                |ExpRel:exp                          {: RESULT = exp; :}
                 ;
 
 ExpRel    ::= expresion:izq OPREL:ope expresion:der {: 
-                                                        String temp = ControlC3D.generaTemp();
-                                                        String c3d = temp + " = " + izq.getCad() + " " + ope.getCad() + " " + der.getCad() + ";\n";
+                                                        String EtqV = ControlC3D.generaEtiqueta();
+                                                        String EtqF = ControlC3D.generaEtiqueta();                                                            
+                                                        String c3d = " if (" + izq.getCad() + " " + ope.getCad() + " " + der.getCad() + ")";
+                                                               c3d+= "goto " + EtqV + "\n";
+                                                               c3d+= "goto " + EtqF + "\n"; 
+                                                        //String c3d = temp + " = " + izq.getCad() + " " + ope.getCad() + " " + der.getCad() + ";\n";
+                                                        
+                                                        ControlC3D.setEtqV(EtqV);
+                                                        ControlC3D.setEtqF(EtqF);
                                                         ControlC3D.agregarC3D(c3d);
-                                                        RESULT = new NodoC3D(temp);         
+                                                        NodoC3D aux = new NodoC3D("Etiquetas ExpRel");         
+                                                        aux.setEtqV(EtqV);        
+                                                        aux.setEtqF(EtqF);
+                                                        RESULT = aux;         
                                                      :}
                 |expresion:exp                       {: RESULT = exp; :}
                 ;
